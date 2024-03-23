@@ -1,71 +1,85 @@
 const express = require('express');
-const app = express();
+const databaseService = require('./services/databaseService');
 
-app.use(express.json());
+const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Масив з якого можемо додавати або видаляти елементи
-let items = [
-    { id: 1, name: 'Artur' },
-    { id: 2, name: 'Olga' },
-    { id: 3, name: 'Jack' },
-];
+app.use(express.json());
+
+// POST -- Додати елемент в масив
+app.post('/items', (req, res) => {
+    // console.log('Додаємо:', req.body);
+    const { name } = req.body;
+    databaseService.createItem(name, (err, result) => {
+        if (err) {
+            res.status(500).send('Невірно вказаний формат name або id'); // тут залишив
+            return;
+        }
+        res.json(result);
+    });
+});
 
 // GET -- Отримати всі елементи
 app.get('/items', (req, res) => {
-    res.json(items);
+    // const { name } = req.body;
+    databaseService.getItems((err, result) => {
+        if (err) {
+            res.status(404).send('Не знайдено'); // тут залишив
+            return;
+        }
+        res.json(result);
+    });
 });
 
 // GET -- Отримати один елемент за ID
 app.get('/items/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    const item = items.find((item) => item.id === id);
-    if (!item) {
-        res.status(404).send('Не знайдено');
-        return;
-    }
-    res.json(item);
-});
-
-// POST -- Додати елемент в масив
-app.post('/items', (req, res) => {
-    console.log('Додаємо:', req.body);
-    const newItem = req.body;
-    if (!newItem || !newItem.id || !newItem.name) {
-        res.status(400).send('Невірно вказаний формат name або id');
-        return;
-    }
-    items.push(newItem);
-    res.status(201).send('Дані введено коректно');
+    const { id } = req.params;
+    databaseService.getItems(id, (err, result) => {
+        if (err) {
+            res.status(404).send('Не знайдено'); // тут залишив
+            return;
+        }
+        res.json(result);
+    });
 });
 
 // PUT
 app.put('/items/:id', (req, res) => {
     console.log('Запит на зміну:', req.body);
-    const id = parseInt(req.params.id);
-    const putItem = req.body;
-
-    const foundItem = items.findIndex((item) => item.id === id);
-    if (foundItem === -1) {
-        res.status(400).send('Не знайдено елемент за id');
-        return;
-    }
-    items[foundItem] = { ...items[foundItem], ...putItem };
-    res.json(items[foundItem]);
+    const { id } = req.params;
+    const { name } = req.body;
+    databaseService.updateItem(id, name, (err, result) => {
+        if (err) {
+            res.status(400).send('Не знайдено елемент за id');
+            return;
+        }
+        res.json(result);
+    });
 });
 
 // DELETE -- Видалити елемент
 app.delete('/items/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    const itemIndex = items.findIndex((item) => item.id === id);
-    if (itemIndex === -1) {
-        res.status(404).send('Item not found');
-        return;
-    }
-    items.splice(itemIndex, 1);
-    res.json({ message: 'Item deleted' });
+    const { id } = req.params;
+    databaseService.deleteItem(id, (err, result) => {
+        if (err) {
+            res.status(404).send('Item not found');
+            return;
+        }
+        res.json(result);
+    });
+});
+
+app.use((req, res, next) => {
+    res.status(404).json({ error: 'Not Found' });
+});
+
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ error: 'Internal Server Error' });
 });
 
 app.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
+    console.log(`Server is running on ${PORT}`);
 });
+
+module.exports = app;
