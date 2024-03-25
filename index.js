@@ -12,7 +12,9 @@ app.post('/items', (req, res) => {
     const { name } = req.body;
     databaseService.createItem(name, (err, result) => {
         if (err) {
-            res.status(500).send('Невірно вказаний формат name або id'); // тут залишив
+            res.status(500).json({
+                error: 'Невірно вказаний формат name або id',
+            }); // тут залишив
             return;
         }
         res.json(result);
@@ -21,10 +23,10 @@ app.post('/items', (req, res) => {
 
 // GET -- Отримати всі елементи
 app.get('/items', (req, res) => {
-    // const { name } = req.body;
+    const { name } = req.body;
     databaseService.getItems((err, result) => {
         if (err) {
-            res.status(404).send('Не знайдено'); // тут залишив
+            res.status(404).json({ error: 'Не знайдено' }); // тут залишив
             return;
         }
         res.json(result);
@@ -34,9 +36,9 @@ app.get('/items', (req, res) => {
 // GET -- Отримати один елемент за ID
 app.get('/items/:id', (req, res) => {
     const { id } = req.params;
-    databaseService.getItems(id, (err, result) => {
+    databaseService.getItemsById(id, (err, result) => {
         if (err) {
-            res.status(404).send('Не знайдено'); // тут залишив
+            res.status(404).json({ error: 'Не знайдено' }); // тут залишив
             return;
         }
         res.json(result);
@@ -50,7 +52,7 @@ app.put('/items/:id', (req, res) => {
     const { name } = req.body;
     databaseService.updateItem(id, name, (err, result) => {
         if (err) {
-            res.status(400).send('Не знайдено елемент за id');
+            res.status(400).json({ error: 'Не знайдено елемент за id' });
             return;
         }
         res.json(result);
@@ -62,7 +64,7 @@ app.delete('/items/:id', (req, res) => {
     const { id } = req.params;
     databaseService.deleteItem(id, (err, result) => {
         if (err) {
-            res.status(404).send('Item not found');
+            res.status(404).json({ error: 'Not Found' });
             return;
         }
         res.json(result);

@@ -34,7 +34,7 @@ class DatabaseService {
         });
     }
     // ===============================
-    getItems(id, callback) {
+    getItemsById(id, callback) {
         this.db.all('SELECT * FROM items WHERE id = ?', [id], (err, rows) => {
             if (err) {
                 return callback(err);
